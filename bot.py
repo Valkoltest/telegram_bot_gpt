@@ -116,6 +116,9 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                 "person_5": lines[7],
                             }
                     )
+
+person_data = ["talk_cobain", "talk_queen", "talk_tolkien", "talk_nietzsche", "talk_hawking"]
+
 async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == "person_1":
@@ -124,17 +127,23 @@ async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     elif query == "person_2":
         dialog.mode = "person_2"
         await person2(update, context)
+
+
 async def person1(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_image(update, context, "talk_cobain")
+
 async def person2(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_image(update, context, "talk_queen")
-async def dialog_person1(update:Update, context:ContextTypes.DEFAULT_TYPE):
+
+
+
+async def person1_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     prompt = load_prompt('talk_cobain')
     response = await chat_gpt.send_question(prompt, text)
     await send_text(update, context, response)
 
-async def dialog_person2(update:Update, context:ContextTypes.DEFAULT_TYPE):
+async def person2_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     prompt = load_prompt('talk_queen')
     response = await chat_gpt.send_question(prompt, text)
@@ -143,14 +152,28 @@ async def dialog_person2(update:Update, context:ContextTypes.DEFAULT_TYPE):
 async def menu_text_handler(update, context):
     if dialog.mode == "gpt":
         await gpt_dialog(update, context)
+
     elif dialog.mode == "random":
         await random(update, context)
+
     elif dialog.mode == "talk":
         await talk(update, context)
+
     elif dialog.mode == "person_1":
-        await dialog_person1(update, context)
+        await person1_dialog(update, context)
+
     elif dialog.mode == "person_2":
-        await dialog_person2(update, context)
+        await person2_dialog(update, context)
+
+    elif dialog.mode == "person_3":
+        await person3_dialog(update, context)
+
+    elif dialog.mode == "person_4":
+        await person4_dialog(update, context)
+
+    elif dialog.mode == "person_5":
+        await person5_dialog(update, context)
+
 
 
 
