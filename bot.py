@@ -103,7 +103,7 @@ async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 # До них має бути прикріплена кнопка "Закінчити", натискання на яку
 # працює так само, як команда /start
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "talk"
+    dialog.mode = None
     await send_image(update, context, "talk")
     text = load_message('talk')
     lines = text.split('\n')
@@ -127,55 +127,80 @@ async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     elif query == "person_2":
         dialog.mode = "person_2"
         await person2(update, context)
+    elif query == "person_3":
+        dialog.mode = "person_3"
+        await person3(update, context)
+    elif query == "person_4":
+        dialog.mode = "person_4"
+        await person4(update, context)
+    elif query == "person_5":
+        dialog.mode = "person_5"
+        await person5(update, context)
+
 
 
 async def person1(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, "talk_cobain")
+    await send_image(update, context, person_data[0])
 
 async def person2(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, "talk_queen")
+    await send_image(update, context, person_data[1])
 
+async def person3(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, person_data[2])
 
+async def person4(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, person_data[3])
+
+async def person5(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, person_data[4])
 
 async def person1_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    prompt = load_prompt('talk_cobain')
+    prompt = load_prompt(person_data[0])
     response = await chat_gpt.send_question(prompt, text)
     await send_text(update, context, response)
 
 async def person2_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    prompt = load_prompt('talk_queen')
+    prompt = load_prompt(person_data[1])
+    response = await chat_gpt.send_question(prompt, text)
+    await send_text(update, context, response)
+
+async def person3_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    prompt = load_prompt(person_data[2])
+    response = await chat_gpt.send_question(prompt, text)
+    await send_text(update, context, response)
+
+async def person4_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    prompt = load_prompt(person_data[3])
+    response = await chat_gpt.send_question(prompt, text)
+    await send_text(update, context, response)
+
+async def person5_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    prompt = load_prompt(person_data[4])
     response = await chat_gpt.send_question(prompt, text)
     await send_text(update, context, response)
 
 async def menu_text_handler(update, context):
     if dialog.mode == "gpt":
         await gpt_dialog(update, context)
-
     elif dialog.mode == "random":
         await random(update, context)
-
     elif dialog.mode == "talk":
         await talk(update, context)
-
     elif dialog.mode == "person_1":
         await person1_dialog(update, context)
-
     elif dialog.mode == "person_2":
         await person2_dialog(update, context)
-
     elif dialog.mode == "person_3":
         await person3_dialog(update, context)
-
     elif dialog.mode == "person_4":
         await person4_dialog(update, context)
-
     elif dialog.mode == "person_5":
         await person5_dialog(update, context)
-
-
-
 
 #
 dialog = Dialog()
