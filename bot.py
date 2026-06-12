@@ -123,64 +123,26 @@ async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     query = update.callback_query.data
     if query == "person_1":
         dialog.mode = "person_1"
-        await person1(update, context)
+        await person(update, context, 0)
     elif query == "person_2":
         dialog.mode = "person_2"
-        await person2(update, context)
+        await person(update, context, 1)
     elif query == "person_3":
         dialog.mode = "person_3"
-        await person3(update, context)
+        await person(update, context, 2)
     elif query == "person_4":
         dialog.mode = "person_4"
-        await person4(update, context)
+        await person(update, context, 3)
     elif query == "person_5":
         dialog.mode = "person_5"
-        await person5(update, context)
+        await person(update, context, 4)
 
+async def person(update: Update, context: ContextTypes.DEFAULT_TYPE, index: int):
+    await send_image(update, context, person_data[index])
 
-
-async def person1(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, person_data[0])
-
-async def person2(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, person_data[1])
-
-async def person3(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, person_data[2])
-
-async def person4(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, person_data[3])
-
-async def person5(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await send_image(update, context, person_data[4])
-
-async def person1_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def person_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE, index: int):
     text = update.message.text
-    prompt = load_prompt(person_data[0])
-    response = await chat_gpt.send_question(prompt, text)
-    await send_text(update, context, response)
-
-async def person2_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    prompt = load_prompt(person_data[1])
-    response = await chat_gpt.send_question(prompt, text)
-    await send_text(update, context, response)
-
-async def person3_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    prompt = load_prompt(person_data[2])
-    response = await chat_gpt.send_question(prompt, text)
-    await send_text(update, context, response)
-
-async def person4_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    prompt = load_prompt(person_data[3])
-    response = await chat_gpt.send_question(prompt, text)
-    await send_text(update, context, response)
-
-async def person5_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    prompt = load_prompt(person_data[4])
+    prompt = load_prompt(person_data[index])
     response = await chat_gpt.send_question(prompt, text)
     await send_text(update, context, response)
 
@@ -192,15 +154,15 @@ async def menu_text_handler(update, context):
     elif dialog.mode == "talk":
         await talk(update, context)
     elif dialog.mode == "person_1":
-        await person1_dialog(update, context)
+        await person_dialog(update, context, 0)
     elif dialog.mode == "person_2":
-        await person2_dialog(update, context)
+        await person_dialog(update, context, 1)
     elif dialog.mode == "person_3":
-        await person3_dialog(update, context)
+        await person_dialog(update, context, 2)
     elif dialog.mode == "person_4":
-        await person4_dialog(update, context)
+        await person_dialog(update, context, 3)
     elif dialog.mode == "person_5":
-        await person5_dialog(update, context)
+        await person_dialog(update, context, 4)
 
 #
 dialog = Dialog()
