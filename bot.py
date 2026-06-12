@@ -11,6 +11,7 @@ from util import (load_message, send_text, send_image, show_main_menu,
 import credentials
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dialog.mode = None
     text = load_message('main')
     await send_image(update, context, 'main')
     await send_text(update, context, text)
@@ -36,6 +37,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # працює так само, як команда /random
 
 async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dialog.mode = "random"
     await send_image(update, context, 'random')
     prompt = load_prompt('random')
     response = await chat_gpt.send_question(prompt, 'Давай рандомний факт')
@@ -47,13 +49,15 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'random_one_more' :'Хочу ще факт',
         }
     )
-
+    dialog.mode = None
 async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == 'random_finish':
+        dialog.mode = None
         await start(update, context)
     elif query == 'random_one_more':
         await random(update, context)
+
     await update.callback_query.answer()
 
 # 2. *"ChatGPT інтерфейс"*
@@ -73,29 +77,81 @@ async def gpt_dialog(update, context):
     text = update.message.text
     prompt = load_prompt("gpt")
     response = await chat_gpt.send_question(prompt, text)
-    #await send_text(update, context, response)
     await send_text_buttons(
         update, context,
         response,
         {
             'gpt_finish': 'Закінчити',
-            'gpt_one_more': 'Наступне питання',
         }
     )
 
 async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == 'gpt_finish':
+        dialog.mode = None
         await start(update, context)
-    elif query == 'gpt_one_more':
-        await gpt(update, context)
+
     await update.callback_query.answer()
 
-async def run(update, context):
+# 3. *"Діалог з відомою особистістю"*
+# Телеграм-бот повинен обробляти команду /talk.
+# При обробці команди бот надсилає заздалегідь підготовлене зображення та
+# пропонує вибір з декількох відомих особистостей,
+# використовуючи кнопки. При натисканні кнопки потрібно встановити промпт обраної особистості.
+# Подальші текстові повідомлення від користувача потрібно передавати ChatGPT та
+# повертати його відповіді користувачеві.
+# До них має бути прикріплена кнопка "Закінчити", натискання на яку
+# працює так само, як команда /start
+async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dialog.mode = "talk"
+    await send_image(update, context, "talk")
+    text = load_message('talk')
+    lines = text.split('\n')
+    await send_text_buttons(update, context, lines[0],
+                            {
+                                "person_1": lines[3],
+                                "person_2": lines[4],
+                                "person_3": lines[5],
+                                "person_4": lines[6],
+                                "person_5": lines[7],
+                            }
+                    )
+async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query.data
+    if query == "person_1":
+        dialog.mode = "person_1"
+        await person1(update, context)
+    elif query == "person_2":
+        dialog.mode = "person_2"
+        await person2(update, context)
+async def person1(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, "talk_cobain")
+async def person2(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, "talk_queen")
+async def dialog_person1(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    prompt = load_prompt('talk_cobain')
+    response = await chat_gpt.send_question(prompt, text)
+    await send_text(update, context, response)
+
+async def dialog_person2(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    prompt = load_prompt('talk_queen')
+    response = await chat_gpt.send_question(prompt, text)
+    await send_text(update, context, response)
+
+async def menu_text_handler(update, context):
     if dialog.mode == "gpt":
         await gpt_dialog(update, context)
     elif dialog.mode == "random":
         await random(update, context)
+    elif dialog.mode == "talk":
+        await talk(update, context)
+    elif dialog.mode == "person_1":
+        await dialog_person1(update, context)
+    elif dialog.mode == "person_2":
+        await dialog_person2(update, context)
+
 
 
 #
@@ -109,10 +165,12 @@ app = ApplicationBuilder().token(credentials.BOT_TOKEN).build()
 app.add_handler(CommandHandler('start', start))
 app.add_handler(CommandHandler('random', random))
 app.add_handler(CommandHandler('gpt', gpt))
+app.add_handler(CommandHandler('talk', talk))
 
 # Зареєструвати обробник колбеку можна так:
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, run))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handler))
 app.add_handler(CallbackQueryHandler(random_buttons_handler, pattern='^random_.*'))
 app.add_handler(CallbackQueryHandler(gpt_buttons_handler, pattern='^gpt_.*'))
+app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^person_.*'))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
