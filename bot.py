@@ -146,6 +146,32 @@ async def person_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE, inde
     response = await chat_gpt.send_question(prompt, text)
     await send_text(update, context, response)
 
+#4. *"Квіз"*
+# Телеграм-бот повинен обробляти команду /quiz.
+# При обробці команди бот надсилає заздалегідь підготовлене зображення
+# та пропонує вибір з декількох тем, використовуючи кнопки.
+# Після вибору теми, передати запит ChatGPT і, отримавши питання квізу, передати його
+# користувачеві. Наступне текстове повідомлення користувача вважається відповіддю.
+# Його потрібно передати ChatGPT та отримати результат. Результат передати користувачеві
+# з можливістю задати ще питання на ту ж тему, змінити тему або закінчити квіз, за допомогою кнопок.
+# Бот також повинен вести рахунок правильних відповідей та
+# відображати разом з черговим результатом
+
+async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, "quiz")
+    text = load_message("quiz")
+    await send_text_buttons(
+        update,
+        context,
+        text,
+        {
+            "quiz_prog": "Програмування",
+            "quiz_math": "Математика",
+            "quiz_biology": "Біологія",
+            "quiz_more": "Одна з попередніх тем",
+        }
+    )
+
 async def menu_text_handler(update, context):
     if dialog.mode == "gpt":
         await gpt_dialog(update, context)
@@ -176,6 +202,7 @@ app.add_handler(CommandHandler('start', start))
 app.add_handler(CommandHandler('random', random))
 app.add_handler(CommandHandler('gpt', gpt))
 app.add_handler(CommandHandler('talk', talk))
+app.add_handler(CommandHandler('quiz', quiz))
 
 # Зареєструвати обробник колбеку можна так:
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handler))
