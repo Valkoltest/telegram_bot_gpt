@@ -1,9 +1,7 @@
 from http.client import responses
 
 from telegram import Update
-#from telegram.ext import ApplicationBuilder, CallbackQueryHandler, ContextTypes, CommandHandler, filters
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ContextTypes
-#from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from gpt import ChatGptService
 from util import (load_message, send_text, send_image, show_main_menu,
                   default_callback_handler, load_prompt, send_text_buttons, Dialog)
@@ -103,7 +101,7 @@ async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 # До них має бути прикріплена кнопка "Закінчити", натискання на яку
 # працює так само, як команда /start
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = None
+    dialog.mode = talk
     await send_image(update, context, "talk")
     text = load_message('talk')
     lines = text.split('\n')
@@ -136,6 +134,8 @@ async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     elif query == "person_5":
         dialog.mode = "person_5"
         await person(update, context, 4)
+
+    await update.callback_query.answer()
 
 async def person(update: Update, context: ContextTypes.DEFAULT_TYPE, index: int):
     await send_image(update, context, person_data[index])
@@ -171,6 +171,33 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "quiz_more": "Одна з попередніх тем",
         }
     )
+async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query.data
+    if query == "quiz_prog":
+        dialog.mode = "quiz_prog"
+    elif query == "quiz_math":
+        dialog.mode = "quiz_math"
+    elif query == "quiz_biology":
+        dialog.mode = "quiz_biology"
+    elif query == "quiz_more":
+        dialog.mode = "quiz_more"
+    await quiz_gpt_question(update, context, str(query))
+
+    await update.callback_query.answer()
+
+async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, theme: str):
+    prompt = load_prompt("quiz")
+    response = await chat_gpt.send_question(prompt, theme)
+    await send_text(update, context, response)
+
+async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
+    answer = update.message.text
+    response = await chat_gpt.add_message(answer)
+    await send_text(update, context, response)
+    dialog.mode = None
+
+
+
 
 async def menu_text_handler(update, context):
     if dialog.mode == "gpt":
@@ -189,6 +216,17 @@ async def menu_text_handler(update, context):
         await person_dialog(update, context, 3)
     elif dialog.mode == "person_5":
         await person_dialog(update, context, 4)
+    elif dialog.mode == "quiz_prog":
+        await quiz_gpt_answer(update, context)
+    elif dialog.mode == "quiz_math":
+        await quiz_gpt_answer(update, context)
+    elif dialog.mode == "quiz_biology":
+        await quiz_gpt_answer(update, context)
+    elif dialog.mode == "quiz_more":
+        await quiz_gpt_answer(update, context)
+    else:
+        await send_text(update, context, "Використовуйте доступні комнди.")
+
 
 #
 dialog = Dialog()
@@ -209,5 +247,6 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handle
 app.add_handler(CallbackQueryHandler(random_buttons_handler, pattern='^random_.*'))
 app.add_handler(CallbackQueryHandler(gpt_buttons_handler, pattern='^gpt_.*'))
 app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^person_.*'))
+app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
