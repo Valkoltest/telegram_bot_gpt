@@ -4,7 +4,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ContextTypes
 from gpt import ChatGptService
 from util import (load_message, send_text, send_image, show_main_menu,
-                  default_callback_handler, load_prompt, send_text_buttons, Dialog, Success, QuestionСounter)
+                  default_callback_handler, load_prompt, send_text_buttons, Dialog, Success, QuestionCounter,
+                  AskedQuestion)
 
 import credentials
 
@@ -200,20 +201,25 @@ async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, 
         theme = list(quiz_themes.keys())[random.randint(0, 3)]
     response = await chat_gpt.send_question(prompt, theme)
     await send_text(update, context, response)
+    asked_question.mode = True
 
 async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
-    answer = update.message.text
-    response = await chat_gpt.add_message(answer)
-    if response == "Правильно!":
-        success.mode += 1
-    text = f"{response} \nУспіх: {success.mode} з {question_counter.mode}"
-    await send_text_buttons(update, context, text,
-                            {
-                                "theme_continue": "Наступне питання",
-                                "theme_choice": "Змінити тему",
-                                "theme_end": "Закічити квіз",
-                            }
-                            )
+    if asked_question.mode:
+        answer = update.message.text
+        response = await chat_gpt.add_message(answer)
+        if response == "Правильно!":
+            success.mode += 1
+        text = f"{response} \nУспіх: {success.mode} з {question_counter.mode}"
+        await send_text_buttons(update, context, text,
+                                {
+                                    "theme_continue": "Наступне питання",
+                                    "theme_choice": "Змінити тему",
+                                    "theme_end": "Закічити квіз",
+                                }
+                                )
+        asked_question.mode = False
+    else:
+        await send_text(update, context, "Ви на це питання вже відповіли. Оберіть команду.")
 
 async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
@@ -256,8 +262,10 @@ dialog = Dialog()
 dialog.mode = None
 success = Success()
 success.mode = None
-question_counter = QuestionСounter()
+question_counter = QuestionCounter()
 question_counter.mode = None
+asked_question = AskedQuestion()
+asked_question.mode = None
 
 chat_gpt = ChatGptService(credentials.ChatGPT_TOKEN)
 app = ApplicationBuilder().token(credentials.BOT_TOKEN).build()
