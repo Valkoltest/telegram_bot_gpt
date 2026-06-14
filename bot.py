@@ -4,9 +4,11 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ContextTypes
 from gpt import ChatGptService
 from util import (load_message, send_text, send_image, show_main_menu,
-                  default_callback_handler, load_prompt, send_text_buttons, Dialog)
+                  default_callback_handler, load_prompt, send_text_buttons, Dialog, Success)
 
 import credentials
+
+import random
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = None
@@ -34,7 +36,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # І кнопка "Хочу ще факт", натискання на яку
 # працює так само, як команда /random
 
-async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = "random"
     await send_image(update, context, 'random')
     prompt = load_prompt('random')
@@ -54,7 +56,7 @@ async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_T
         dialog.mode = None
         await start(update, context)
     elif query == 'random_one_more':
-        await random(update, context)
+        await bot_random(update, context)
 
     await update.callback_query.answer()
 
@@ -157,6 +159,13 @@ async def person_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE, inde
 # Бот також повинен вести рахунок правильних відповідей та
 # відображати разом з черговим результатом
 
+quiz_themes = {
+            "quiz_prog": "Програмування",
+            "quiz_math": "Математика",
+            "quiz_biology": "Біологія",
+            "quiz_more": "Одна з попередніх тем",
+        }
+
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_image(update, context, "quiz")
     text = load_message("quiz")
@@ -164,46 +173,58 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
         update,
         context,
         text,
-        {
-            "quiz_prog": "Програмування",
-            "quiz_math": "Математика",
-            "quiz_biology": "Біологія",
-            "quiz_more": "Одна з попередніх тем",
-        }
+        quiz_themes
     )
 async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    quiz_theme = ""
     query = update.callback_query.data
     if query == "quiz_prog":
-        dialog.mode = "quiz_prog"
+        quiz_theme = list(quiz_themes.keys())[0]
     elif query == "quiz_math":
-        dialog.mode = "quiz_math"
+        quiz_theme = list(quiz_themes.keys())[1]
     elif query == "quiz_biology":
-        dialog.mode = "quiz_biology"
+        quiz_theme = list(quiz_themes.keys())[2]
     elif query == "quiz_more":
-        dialog.mode = "quiz_more"
-    await quiz_gpt_question(update, context, str(query))
+        quiz_theme = list(quiz_themes.keys())[3]
+    dialog.mode = quiz_theme
+    success.mode = 0
+    await quiz_gpt_question(update, context, quiz_theme)
 
     await update.callback_query.answer()
 
 async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, theme: str):
     prompt = load_prompt("quiz")
+    if theme == "quiz_more":
+        theme = list(quiz_themes.keys())[random.randint(0, 3)]
     response = await chat_gpt.send_question(prompt, theme)
     await send_text(update, context, response)
 
 async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
     answer = update.message.text
     response = await chat_gpt.add_message(answer)
-    await send_text(update, context, response)
-    dialog.mode = None
+    if response == "Правильно!":
+        success.mode += 1
+    text = response + f"\nУспіх: {success.mode}"
+    await send_text_buttons(update, context, text,
+                            {
+                                "theme_continue": "Наступне питання",
+                                "theme_choice": "Змінити тему",
+                                "theme_end": "Закічити квіз",
+                            }
+                            )
 
-
-
+async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query.data
+    if query == "theme_continue":
+        await quiz_gpt_question(update, context, dialog.mode)
+    elif query == "theme_choice":
+        await quiz(update, context)
+    elif query == "theme_end":
+        await start(update, context)
 
 async def menu_text_handler(update, context):
     if dialog.mode == "gpt":
         await gpt_dialog(update, context)
-    elif dialog.mode == "random":
-        await random(update, context)
     elif dialog.mode == "talk":
         await talk(update, context)
     elif dialog.mode == "person_1":
@@ -231,13 +252,15 @@ async def menu_text_handler(update, context):
 #
 dialog = Dialog()
 dialog.mode = None
+success = Success()
+success.mode = None
 
 chat_gpt = ChatGptService(credentials.ChatGPT_TOKEN)
 app = ApplicationBuilder().token(credentials.BOT_TOKEN).build()
 
 # Зареєструвати обробник команди можна так:
 app.add_handler(CommandHandler('start', start))
-app.add_handler(CommandHandler('random', random))
+app.add_handler(CommandHandler('random', bot_random))
 app.add_handler(CommandHandler('gpt', gpt))
 app.add_handler(CommandHandler('talk', talk))
 app.add_handler(CommandHandler('quiz', quiz))
@@ -248,5 +271,6 @@ app.add_handler(CallbackQueryHandler(random_buttons_handler, pattern='^random_.*
 app.add_handler(CallbackQueryHandler(gpt_buttons_handler, pattern='^gpt_.*'))
 app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^person_.*'))
 app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
+app.add_handler(CallbackQueryHandler(theme_buttons_handler, pattern='^theme_.*'))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
