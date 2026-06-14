@@ -101,3 +101,6 @@ class Dialog:
 
 class Success:
     pass
+
+class QuestionСounter:
+    pass
