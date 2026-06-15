@@ -37,7 +37,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # працює так само, як команда /random
 
 async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "random"
+    dialog.mode = "RANDOM"
     await send_image(update, context, 'random')
     prompt = load_prompt('random')
     response = await chat_gpt.send_question(prompt, 'Давай рандомний факт')
@@ -68,7 +68,7 @@ async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_T
 # передати користувачеві текстовим повідомленням
 
 async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "gpt"
+    dialog.mode = "GPT"
     await send_image(update, context, 'gpt')
     msg = load_message('gpt')
     await send_text(update, context, msg)
@@ -103,7 +103,7 @@ async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 # До них має бути прикріплена кнопка "Закінчити", натискання на яку
 # працює так само, як команда /start
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = talk
+    dialog.mode = "TALK"
     await send_image(update, context, "talk")
     text = load_message('talk')
     lines = text.split('\n')
@@ -122,19 +122,19 @@ person_data = ["talk_cobain", "talk_queen", "talk_tolkien", "talk_nietzsche", "t
 async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == "person_1":
-        dialog.mode = "person_1"
+        dialog.mode = "PERSON_1"
         await person(update, context, 0)
     elif query == "person_2":
-        dialog.mode = "person_2"
+        dialog.mode = "PERSON_2"
         await person(update, context, 1)
     elif query == "person_3":
-        dialog.mode = "person_3"
+        dialog.mode = "PERSON_3"
         await person(update, context, 2)
     elif query == "person_4":
-        dialog.mode = "person_4"
+        dialog.mode = "PERSON_4"
         await person(update, context, 3)
     elif query == "person_5":
-        dialog.mode = "person_5"
+        dialog.mode = "PERSON_5"
         await person(update, context, 4)
 
     await update.callback_query.answer()
@@ -167,6 +167,7 @@ quiz_themes = {
         }
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dialog.mode = "QUIZ"
     await send_image(update, context, "quiz")
     text = load_message("quiz")
     await send_text_buttons(
@@ -230,19 +231,19 @@ async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await start(update, context)
 
 async def menu_text_handler(update, context):
-    if dialog.mode == "gpt":
+    if dialog.mode == "GPT":
         await gpt_dialog(update, context)
-    elif dialog.mode == "talk":
+    elif dialog.mode == "TALK":
         await talk(update, context)
-    elif dialog.mode == "person_1":
+    elif dialog.mode == "PERSON_1":
         await person_dialog(update, context, 0)
-    elif dialog.mode == "person_2":
+    elif dialog.mode == "PERSON_2":
         await person_dialog(update, context, 1)
-    elif dialog.mode == "person_3":
+    elif dialog.mode == "PERSON_3":
         await person_dialog(update, context, 2)
-    elif dialog.mode == "person_4":
+    elif dialog.mode == "PERSON_4":
         await person_dialog(update, context, 3)
-    elif dialog.mode == "person_5":
+    elif dialog.mode == "PERSON_5":
         await person_dialog(update, context, 4)
     elif dialog.mode == "quiz_prog":
         await quiz_gpt_answer(update, context)
