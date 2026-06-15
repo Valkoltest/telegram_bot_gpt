@@ -260,8 +260,6 @@ async def menu_text_handler(update, context):
 #
 dialog = Dialog()
 dialog.mode = None
-dialog = Dialog()
-dialog.mode = None
 dialog.success = 0
 dialog.question_counter = 0
 dialog.asked_question = False
