@@ -4,8 +4,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ContextTypes
 from gpt import ChatGptService
 from util import (load_message, send_text, send_image, show_main_menu,
-                  default_callback_handler, load_prompt, send_text_buttons, Dialog, Success, QuestionCounter,
-                  AskedQuestion)
+                  default_callback_handler, load_prompt, send_text_buttons, Dialog)
 
 import credentials
 
@@ -188,28 +187,28 @@ async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     elif query == "quiz_more":
         quiz_theme = list(quiz_themes.keys())[3]
     dialog.mode = quiz_theme
-    success.mode = 0
-    question_counter.mode = 0
+    dialog.success = 0
+    dialog.question_counter = 0
     await quiz_gpt_question(update, context, quiz_theme)
 
     await update.callback_query.answer()
 
 async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, theme: str):
-    question_counter.mode += 1
+    dialog.question_counter += 1
     prompt = load_prompt("quiz")
     if theme == "quiz_more":
         theme = list(quiz_themes.keys())[random.randint(0, 3)]
     response = await chat_gpt.send_question(prompt, theme)
     await send_text(update, context, response)
-    asked_question.mode = True
+    dialog.asked_question = True
 
 async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
-    if asked_question.mode:
+    if dialog.asked_question:
         answer = update.message.text
         response = await chat_gpt.add_message(answer)
         if response == "Правильно!":
-            success.mode += 1
-        text = f"{response} \nУспіх: {success.mode} з {question_counter.mode}"
+            dialog.success += 1
+        text = f"{response} \nУспіх: {dialog.success} з {dialog.question_counter}"
         await send_text_buttons(update, context, text,
                                 {
                                     "theme_continue": "Наступне питання",
@@ -217,7 +216,7 @@ async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
                                     "theme_end": "Закічити квіз",
                                 }
                                 )
-        asked_question.mode = False
+        dialog.asked_question = False
     else:
         await send_text(update, context, "Ви на це питання вже відповіли. Оберіть команду.")
 
@@ -260,12 +259,11 @@ async def menu_text_handler(update, context):
 #
 dialog = Dialog()
 dialog.mode = None
-success = Success()
-success.mode = None
-question_counter = QuestionCounter()
-question_counter.mode = None
-asked_question = AskedQuestion()
-asked_question.mode = None
+dialog = Dialog()
+dialog.mode = None
+dialog.success = 0
+dialog.question_counter = 0
+dialog.asked_question = False
 
 chat_gpt = ChatGptService(credentials.ChatGPT_TOKEN)
 app = ApplicationBuilder().token(credentials.BOT_TOKEN).build()
