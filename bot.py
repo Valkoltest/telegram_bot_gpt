@@ -180,14 +180,6 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     quiz_theme = query
-    # if query == "quiz_prog":
-    #     quiz_theme = list(quiz_themes.keys())[0]
-    # elif query == "quiz_math":
-    #     quiz_theme = list(quiz_themes.keys())[1]
-    # elif query == "quiz_biology":
-    #     quiz_theme = list(quiz_themes.keys())[2]
-    # elif query == "quiz_more":
-    #     quiz_theme = list(quiz_themes.keys())[3]
     dialog.mode = quiz_theme
     dialog.success = 0
     dialog.question_counter = 0
