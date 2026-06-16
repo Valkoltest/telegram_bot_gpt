@@ -122,20 +122,16 @@ person_data = ["talk_cobain", "talk_queen", "talk_tolkien", "talk_nietzsche", "t
 
 async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
+    dialog.mode = query
     if query == "person_1":
-        dialog.mode = "PERSON_1"
         await person(update, context, 0)
     elif query == "person_2":
-        dialog.mode = "PERSON_2"
         await person(update, context, 1)
     elif query == "person_3":
-        dialog.mode = "PERSON_3"
         await person(update, context, 2)
     elif query == "person_4":
-        dialog.mode = "PERSON_4"
         await person(update, context, 3)
     elif query == "person_5":
-        dialog.mode = "PERSON_5"
         await person(update, context, 4)
 
     await update.callback_query.answer()
@@ -241,15 +237,15 @@ async def menu_text_handler(update, context):
         await gpt_dialog(update, context)
     elif dialog.mode == "TALK":
         await talk(update, context)
-    elif dialog.mode == "PERSON_1":
+    elif dialog.mode == "person_1":
         await person_dialog(update, context, 0)
-    elif dialog.mode == "PERSON_2":
+    elif dialog.mode == "person_2":
         await person_dialog(update, context, 1)
-    elif dialog.mode == "PERSON_3":
+    elif dialog.mode == "person_3":
         await person_dialog(update, context, 2)
-    elif dialog.mode == "PERSON_4":
+    elif dialog.mode == "person_4":
         await person_dialog(update, context, 3)
-    elif dialog.mode == "PERSON_5":
+    elif dialog.mode == "person_5":
         await person_dialog(update, context, 4)
     elif dialog.mode == "quiz_prog":
         await quiz_gpt_answer(update, context)
