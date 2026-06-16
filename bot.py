@@ -20,7 +20,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'random': 'Дізнатися випадковий цікавий факт 🧠',
         'gpt': 'Задати питання чату GPT 🤖',
         'talk': 'Поговорити з відомою особистістю 👤',
-        'quiz': 'Взяти участь у квізі ❓'
+        'quiz': 'Взяти участь у квізі ❓',
+        'translator': 'Перекладач'
         # Додати команду в меню можна так:
         # 'command': 'button text'
 
@@ -177,16 +178,16 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
         quiz_themes
     )
 async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    quiz_theme = ""
     query = update.callback_query.data
-    if query == "quiz_prog":
-        quiz_theme = list(quiz_themes.keys())[0]
-    elif query == "quiz_math":
-        quiz_theme = list(quiz_themes.keys())[1]
-    elif query == "quiz_biology":
-        quiz_theme = list(quiz_themes.keys())[2]
-    elif query == "quiz_more":
-        quiz_theme = list(quiz_themes.keys())[3]
+    quiz_theme = query
+    # if query == "quiz_prog":
+    #     quiz_theme = list(quiz_themes.keys())[0]
+    # elif query == "quiz_math":
+    #     quiz_theme = list(quiz_themes.keys())[1]
+    # elif query == "quiz_biology":
+    #     quiz_theme = list(quiz_themes.keys())[2]
+    # elif query == "quiz_more":
+    #     quiz_theme = list(quiz_themes.keys())[3]
     dialog.mode = quiz_theme
     dialog.success = 0
     dialog.question_counter = 0
@@ -229,6 +230,19 @@ async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await quiz(update, context)
     elif query == "theme_end":
         await start(update, context)
+
+
+async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        dialog.mode = "TRANSLATOR"
+        text = load_message("translator")
+        await send_text(update, context, text)
+        show_main_menu(update, context, {
+            'ua': 'Українська',
+            'en': 'Англійська',
+            'fr': 'Фрацузська',
+            'es': 'Іспанська',
+            'de': 'Німецька'
+        })
 
 async def menu_text_handler(update, context):
     if dialog.mode == "GPT":
@@ -273,6 +287,7 @@ app.add_handler(CommandHandler('random', bot_random))
 app.add_handler(CommandHandler('gpt', gpt))
 app.add_handler(CommandHandler('talk', talk))
 app.add_handler(CommandHandler('quiz', quiz))
+app.add_handler(CommandHandler('translator', translator))
 
 # Зареєструвати обробник колбеку можна так:
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handler))
