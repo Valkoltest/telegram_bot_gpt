@@ -214,13 +214,15 @@ async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
         dialog.mode = "TRANSLATOR"
         text = load_message("translator")
         await send_text(update, context, text)
-        show_main_menu(update, context, {
-            'ua': 'Українська',
-            'en': 'Англійська',
-            'fr': 'Фрацузська',
-            'es': 'Іспанська',
-            'de': 'Німецька'
-        })
+        lines = text.split("\n")
+        await send_text_buttons(update, context, lines[0],
+                                {
+                                    'trans_ua': '🇺🇦 Українська',
+                                    'trans_en': '🇬🇧 Англійська',
+                                    'trans_fr': '🇫🇷 Фрацузська',
+                                    'trans_es': '🇪🇸 Іспанська',
+                                    'trans_de': '🇩🇪 Німецька'
+                                })
 
 async def menu_text_handler(update, context):
     if dialog.mode == "DEFAULT":
