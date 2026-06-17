@@ -110,38 +110,27 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lines = text.split('\n')
     await send_text_buttons(update, context, lines[0],
                             {
-                                "person_1": lines[3],
-                                "person_2": lines[4],
-                                "person_3": lines[5],
-                                "person_4": lines[6],
-                                "person_5": lines[7],
+                                "talk_cobain": "Курт Кобейн - Соліст гурту Nirvana 🎸",
+                                "talk_queen": "Єлизавета II - Королева Об'єднаного Королівства 👑",
+                                "talk_tolkien": 'Джон Толкін - Автор книги "Володар Перснів" 📖',
+                                "talk_nietzsche": "Фрідріх Ніцше - Філософ 🧠",
+                                "talk_hawking": "Стівен Гокінг - Фізик 🔬"
                             }
-                    )
-
-person_data = ["talk_cobain", "talk_queen", "talk_tolkien", "talk_nietzsche", "talk_hawking"]
+                            )
 
 async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     dialog.mode = query
-    if query == "person_1":
-        await person(update, context, 0)
-    elif query == "person_2":
-        await person(update, context, 1)
-    elif query == "person_3":
-        await person(update, context, 2)
-    elif query == "person_4":
-        await person(update, context, 3)
-    elif query == "person_5":
-        await person(update, context, 4)
+    await person(update, context, query)
 
     await update.callback_query.answer()
 
-async def person(update: Update, context: ContextTypes.DEFAULT_TYPE, index: int):
-    await send_image(update, context, person_data[index])
+async def person(update: Update, context: ContextTypes.DEFAULT_TYPE, name: str):
+    await send_image(update, context, name)
 
-async def person_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE, index: int):
+async def person_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE, name: str):
     text = update.message.text
-    prompt = load_prompt(person_data[index])
+    prompt = load_prompt(name)
     response = await chat_gpt.send_question(prompt, text)
     await send_text(update, context, response)
 
@@ -237,16 +226,8 @@ async def menu_text_handler(update, context):
         await gpt_dialog(update, context)
     elif dialog.mode == "TALK":
         await talk(update, context)
-    elif dialog.mode == "person_1":
-        await person_dialog(update, context, 0)
-    elif dialog.mode == "person_2":
-        await person_dialog(update, context, 1)
-    elif dialog.mode == "person_3":
-        await person_dialog(update, context, 2)
-    elif dialog.mode == "person_4":
-        await person_dialog(update, context, 3)
-    elif dialog.mode == "person_5":
-        await person_dialog(update, context, 4)
+    elif dialog.mode[:5] == "talk_":
+        await person_dialog(update, context, dialog.mode)
     elif dialog.mode == "quiz_prog":
         await quiz_gpt_answer(update, context)
     elif dialog.mode == "quiz_math":
@@ -257,7 +238,6 @@ async def menu_text_handler(update, context):
         await quiz_gpt_answer(update, context)
     else:
         await send_text(update, context, "Використовуйте доступні комнди.")
-
 
 #
 dialog = Dialog()
@@ -281,7 +261,7 @@ app.add_handler(CommandHandler('translator', translator))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handler))
 app.add_handler(CallbackQueryHandler(random_buttons_handler, pattern='^random_.*'))
 app.add_handler(CallbackQueryHandler(gpt_buttons_handler, pattern='^gpt_.*'))
-app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^person_.*'))
+app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^talk_.*'))
 app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
 app.add_handler(CallbackQueryHandler(theme_buttons_handler, pattern='^theme_.*'))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
