@@ -223,7 +223,6 @@ async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
         })
 
 async def menu_text_handler(update, context):
-    print(dialog.mode)
     if dialog.mode == "DEFAULT":
         await send_text(update, context, "Використовуйте доступні комнди.")
     elif dialog.mode == "GPT":
