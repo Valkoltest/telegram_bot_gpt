@@ -11,7 +11,7 @@ import credentials
 import random
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = None
+    dialog.mode = "DEFAULT"
     text = load_message('main')
     await send_image(update, context, 'main')
     await send_text(update, context, text)
@@ -50,11 +50,11 @@ async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'random_one_more' :'Хочу ще факт',
         }
     )
-    dialog.mode = None
+    dialog.mode = "DEFAULT"
 async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == 'random_finish':
-        dialog.mode = None
+        dialog.mode = "DEFAULT"
         await start(update, context)
     elif query == 'random_one_more':
         await bot_random(update, context)
@@ -223,7 +223,10 @@ async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
         })
 
 async def menu_text_handler(update, context):
-    if dialog.mode == "GPT":
+    print(dialog.mode)
+    if dialog.mode == "DEFAULT":
+        await send_text(update, context, "Використовуйте доступні комнди.")
+    elif dialog.mode == "GPT":
         await gpt_dialog(update, context)
     elif dialog.mode == "TALK":
         await talk(update, context)
