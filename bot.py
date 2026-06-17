@@ -165,6 +165,8 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     quiz_theme = query
+    prompt = load_prompt("quiz")
+    chat_gpt.set_prompt(prompt)
     dialog.mode = quiz_theme
     dialog.success = 0
     dialog.question_counter = 0
@@ -174,10 +176,9 @@ async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, theme: str):
     dialog.question_counter += 1
-    prompt = load_prompt("quiz")
     if theme == "quiz_more":
         theme = list(quiz_themes.keys())[random.randint(0, 3)]
-    response = await chat_gpt.send_question(prompt, theme)
+    response = await chat_gpt.add_message(theme)
     await send_text(update, context, response)
     dialog.asked_question = True
 
@@ -228,13 +229,7 @@ async def menu_text_handler(update, context):
         await talk(update, context)
     elif dialog.mode[:5] == "talk_":
         await person_dialog(update, context, dialog.mode)
-    elif dialog.mode == "quiz_prog":
-        await quiz_gpt_answer(update, context)
-    elif dialog.mode == "quiz_math":
-        await quiz_gpt_answer(update, context)
-    elif dialog.mode == "quiz_biology":
-        await quiz_gpt_answer(update, context)
-    elif dialog.mode == "quiz_more":
+    elif dialog.mode[:5] == "quiz_":
         await quiz_gpt_answer(update, context)
     else:
         await send_text(update, context, "Використовуйте доступні комнди.")
