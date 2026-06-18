@@ -10,6 +10,7 @@ import credentials
 
 import random
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = "DEFAULT"
     text = load_message('main')
@@ -37,6 +38,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # І кнопка "Хочу ще факт", натискання на яку
 # працює так само, як команда /random
 
+
 async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = "RANDOM"
     await send_image(update, context, 'random')
@@ -51,6 +53,8 @@ async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
     dialog.mode = "DEFAULT"
+
+
 async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == 'random_finish':
@@ -68,11 +72,13 @@ async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_T
 # текст отриманого повідомлення. Відповідь ChatGPT потрібно отримати та
 # передати користувачеві текстовим повідомленням
 
+
 async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = "GPT"
     await send_image(update, context, 'gpt')
     msg = load_message('gpt')
     await send_text(update, context, msg)
+
 
 async def gpt_dialog(update, context):
     text = update.message.text
@@ -85,6 +91,7 @@ async def gpt_dialog(update, context):
             'gpt_finish': 'Закінчити',
         }
     )
+
 
 async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
@@ -103,6 +110,8 @@ async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 # повертати його відповіді користувачеві.
 # До них має бути прикріплена кнопка "Закінчити", натискання на яку
 # працює так само, як команда /start
+
+
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = "TALK"
     await send_image(update, context, "talk")
@@ -118,6 +127,7 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             }
                             )
 
+
 async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     dialog.mode = query
@@ -125,8 +135,10 @@ async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await update.callback_query.answer()
 
+
 async def person(update: Update, context: ContextTypes.DEFAULT_TYPE, name: str):
     await send_image(update, context, name)
+
 
 async def person_dialog(update: Update, context: ContextTypes.DEFAULT_TYPE, name: str):
     text = update.message.text
@@ -152,6 +164,7 @@ quiz_themes = {
             "quiz_more": "Одна з попередніх тем",
         }
 
+
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dialog.mode = "QUIZ"
     await send_image(update, context, "quiz")
@@ -162,6 +175,8 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text,
         quiz_themes
     )
+
+
 async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     quiz_theme = query
@@ -174,6 +189,7 @@ async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     await update.callback_query.answer()
 
+
 async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, theme: str):
     dialog.question_counter += 1
     if theme == "quiz_more":
@@ -181,6 +197,7 @@ async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     response = await chat_gpt.add_message(theme)
     await send_text(update, context, response)
     dialog.asked_question = True
+
 
 async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
     if dialog.asked_question:
@@ -200,6 +217,7 @@ async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await send_text(update, context, "Ви на це питання вже відповіли. Оберіть команду.")
 
+
 async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == "theme_continue":
@@ -212,8 +230,8 @@ async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
         dialog.mode = "TRANSLATOR"
+        await send_image(update, context, 'translator')
         text = load_message("translator")
-        await send_text(update, context, text)
         lines = text.split("\n")
         await send_text_buttons(update, context, lines[0],
                                 {
@@ -223,6 +241,28 @@ async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                     'trans_es': '🇪🇸 Іспанська',
                                     'trans_de': '🇩🇪 Німецька'
                                 })
+
+
+async def translator_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query.data
+    dialog.mode = query
+    prompt = load_prompt("translator")
+    chat_gpt.set_prompt(prompt)
+    await translator_gpt_invitation(update, context, query)
+
+    await update.callback_query.answer()
+
+
+async def translator_gpt_invitation(update: Update, context: ContextTypes.DEFAULT_TYPE, language: str):
+    response = await chat_gpt.add_message(language)
+    await send_text(update, context, response)
+
+
+async def translator_gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, language: str):
+    text = update.message.text
+    response = await chat_gpt.add_message(text)
+    await send_text(update, context, response)
+
 
 async def menu_text_handler(update, context):
     if dialog.mode == "DEFAULT":
@@ -235,6 +275,8 @@ async def menu_text_handler(update, context):
         await person_dialog(update, context, dialog.mode)
     elif dialog.mode[:5] == "quiz_":
         await quiz_gpt_answer(update, context)
+    elif dialog.mode[:6] == "trans_":
+        await translator_gpt_answer(update, context, dialog.mode)
     else:
         await send_text(update, context, "Використовуйте доступні комнди.")
 
@@ -263,5 +305,6 @@ app.add_handler(CallbackQueryHandler(gpt_buttons_handler, pattern='^gpt_.*'))
 app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^talk_.*'))
 app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
 app.add_handler(CallbackQueryHandler(theme_buttons_handler, pattern='^theme_.*'))
+app.add_handler(CallbackQueryHandler(translator_buttons_handler, pattern='^trans_.*'))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
