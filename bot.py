@@ -227,6 +227,13 @@ async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif query == "theme_end":
         await start(update, context)
 
+# **"Перекладач"**#
+# Бот пропонує вибрати мову, на яку потрібно перекласти текст, використовуючи кнопки.
+# Після вибору мови користувач надсилає текст, який потрібно перекласти.
+# Бот використовує ChatGPT для перекладу тексту та надсилає результат користувачеві.
+# До повідомлення має бути прикріплена кнопка зміни мови та кнопка "Закінчити", натискання на яку
+# працює так само, як команда /start.
+
 
 async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
         dialog.mode = "TRANSLATOR"
@@ -261,7 +268,19 @@ async def translator_gpt_invitation(update: Update, context: ContextTypes.DEFAUL
 async def translator_gpt_answer(update: Update, context: ContextTypes.DEFAULT_TYPE, language: str):
     text = update.message.text
     response = await chat_gpt.add_message(text)
-    await send_text(update, context, response)
+    await send_text_buttons(update, context, response,
+                            {
+                                "lang_change": "Змінити мову",
+                                "lang_end": "Закінчити"
+                            })
+
+
+async def language_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query.data
+    if query == "lang_change":
+        await translator(update, context)
+    elif query == "lang_end":
+        await start(update, context)
 
 
 async def menu_text_handler(update, context):
@@ -306,5 +325,6 @@ app.add_handler(CallbackQueryHandler(talk_buttons_handler, pattern='^talk_.*'))
 app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
 app.add_handler(CallbackQueryHandler(theme_buttons_handler, pattern='^theme_.*'))
 app.add_handler(CallbackQueryHandler(translator_buttons_handler, pattern='^trans_.*'))
+app.add_handler(CallbackQueryHandler(language_buttons_handler, pattern='^lang_.*'))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
