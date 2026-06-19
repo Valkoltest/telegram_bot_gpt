@@ -283,6 +283,13 @@ async def language_buttons_handler(update: Update, context: ContextTypes.DEFAULT
         await start(update, context)
 
 
+# **"Голосовий ChatGPT"**
+# Бот повинен прийняти голосове повідомлення від користувача. Перевести його в текст
+# та надіслати ChatGPT. Отримавши відповідь, перетворити її на голосове повідомлення та
+# надіслати у вигляді аудіоповідомлення користувачеві.
+
+
+
 async def menu_text_handler(update, context):
     if dialog.mode == "DEFAULT":
         await send_text(update, context, "Використовуйте доступні комнди.")
