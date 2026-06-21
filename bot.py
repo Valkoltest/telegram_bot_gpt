@@ -294,16 +294,24 @@ async def language_buttons_handler(update: Update, context: ContextTypes.DEFAULT
 
 
 async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dialog.mode = 'voice'
     await send_image(update, context, 'voice')
     text = load_message('voice')
     await send_text(update, context, text)
+    prompt = load_prompt('voice')
+    chat_gpt.set_prompt(prompt)
 
 async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     path = "resources/voice/voice_in.oga"
     file = await update.message.voice.get_file()
     await file.download_to_drive(path)
-    response = await chat_gpt.send_voice(path)
-    await send_text(update, context, response.text)
+    response_from_voice = await chat_gpt.send_voice(path)
+    prompt = load_prompt("gpt")
+    text = response_from_voice.text
+    response = await chat_gpt.add_message(text)
+    await send_text(update, context, response)
+
+
 
 
 
