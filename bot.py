@@ -298,6 +298,7 @@ async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = load_message('voice')
     await send_text(update, context, text)
     prompt = load_prompt('voice')
+    chat_gpt.set_prompt(prompt)
 
 
 async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -307,6 +308,7 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response_from_voice = await chat_gpt.send_voice(path_in)
     text = response_from_voice.text
     response_from_gpt = await chat_gpt.add_message(text)
+    await send_text(update, context, response_from_gpt)
     path_out = "resources/voice/voice_out.mp3"
     await chat_gpt.get_voice(path_out, text)
     with open(path_out, "rb") as f:
@@ -335,6 +337,7 @@ dialog.mode = None
 dialog.success = 0
 dialog.question_counter = 0
 dialog.asked_question = False
+dialog.temp = None
 
 
 chat_gpt = ChatGptService(credentials.ChatGPT_TOKEN)
