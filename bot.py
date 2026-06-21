@@ -306,7 +306,6 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = await update.message.voice.get_file()
     await file.download_to_drive(path)
     response_from_voice = await chat_gpt.send_voice(path)
-    prompt = load_prompt("gpt")
     text = response_from_voice.text
     response = await chat_gpt.add_message(text)
     await send_text(update, context, response)
