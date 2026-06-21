@@ -307,11 +307,10 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response_from_voice = await chat_gpt.send_voice(path_in)
     text = response_from_voice.text
     response_from_gpt = await chat_gpt.add_message(text)
-    await send_text(update, context, "Зачекайте голосової відповіді")
-    #await send_text(update, context, f"{response_from_gpt}\n\nЗачекайте голосової відповіді")
     path_out = "resources/voice/voice_out.mp3"
     await chat_gpt.get_voice(path_out, text)
-    await update.message.reply_audio(audio=path_out)
+    with open(path_out, "rb") as f:
+        await update.message.reply_audio(audio=f)
 
 
 async def menu_text_handler(update, context):
