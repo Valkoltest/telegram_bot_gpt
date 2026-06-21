@@ -164,7 +164,7 @@ quiz_themes = {
             "quiz_prog": "Програмування",
             "quiz_math": "Математика",
             "quiz_biology": "Біологія",
-            "quiz_more": "Одна з попередніх тем",
+            "quiz_more": "Попередня тема",
         }
 
 
@@ -182,7 +182,11 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
-    quiz_theme = query
+    if query == "quiz_more":
+        quiz_theme = dialog.last_theme
+    else:
+        quiz_theme = query
+        dialog.last_theme = query
     prompt = load_prompt("quiz")
     chat_gpt.set_prompt(prompt)
     dialog.mode = quiz_theme
@@ -195,8 +199,9 @@ async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def quiz_gpt_question(update: Update, context: ContextTypes.DEFAULT_TYPE, theme: str):
     dialog.question_counter += 1
-    if theme == "quiz_more":
-        theme = list(quiz_themes.keys())[random.randint(0, 3)]
+    # Так цікавіше, але не відповідає тз
+    # if theme == "quiz_more":
+    #     theme = list(quiz_themes.keys())[random.randint(0, 3)]
     response = await chat_gpt.add_message(theme)
     await send_text(update, context, response)
     dialog.asked_question = True
@@ -337,7 +342,7 @@ dialog.mode = None
 dialog.success = 0
 dialog.question_counter = 0
 dialog.asked_question = False
-dialog.temp = None
+dialog.last_theme = "quiz_prog"
 
 
 chat_gpt = ChatGptService(credentials.ChatGPT_TOKEN)
