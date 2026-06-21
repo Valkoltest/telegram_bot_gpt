@@ -3,3 +3,5 @@
 .env
 **/.DS_Store
 __pycache__
+resources/voice/voice_in.oga
+resources/voice/voice_out.mp3

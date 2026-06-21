@@ -302,13 +302,16 @@ async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_gpt.set_prompt(prompt)
 
 async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    path = "resources/voice/voice_in.oga"
+    path_in = "resources/voice/voice_in.oga"
     file = await update.message.voice.get_file()
-    await file.download_to_drive(path)
-    response_from_voice = await chat_gpt.send_voice(path)
+    await file.download_to_drive(path_in)
+    response_from_voice = await chat_gpt.send_voice(path_in)
     text = response_from_voice.text
-    response = await chat_gpt.add_message(text)
-    await send_text(update, context, response)
+    response_from_gpt = await chat_gpt.add_message(text)
+    await send_text(update, context, response_from_gpt)
+    path_out = "resources/voice/voice_out.mp3"
+    await chat_gpt.get_voice(path_out, response_from_gpt)
+
 
 
 

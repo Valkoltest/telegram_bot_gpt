@@ -1,6 +1,8 @@
 from openai import OpenAI
 import httpx as httpx
 
+import base64
+
 import credentials
 
 import credentials
@@ -51,3 +53,23 @@ class ChatGptService:
                 language="uk"  # Вкажіть мову, наприклад "uk" або "en"
             )
         return transcription
+
+    async def get_voice(self, path: str, text: str):
+        client = OpenAI(api_key=credentials.ChatGPT_TOKEN)
+        completion = client.chat.completions.create(
+            model="gpt-audio-1.5",
+            modalities=["text", "audio"],
+            audio={"voice": "alloy", "format": "mp3"},
+            messages=[
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ]
+        )
+
+        print(completion.choices[0])
+
+        wav_bytes = base64.b64decode(completion.choices[0].message.audio.data)
+        with open(path, "wb") as f:
+            f.write(wav_bytes)
