@@ -3,7 +3,7 @@ import httpx as httpx
 
 import base64
 
-import credentials
+from openai.types.beta.threads import message
 
 import credentials
 
@@ -67,9 +67,6 @@ class ChatGptService:
                 }
             ]
         )
-
-        print(completion.choices[0])
-
         wav_bytes = base64.b64decode(completion.choices[0].message.audio.data)
         with open(path, "wb") as f:
             f.write(wav_bytes)

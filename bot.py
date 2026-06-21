@@ -1,6 +1,5 @@
 from http.client import responses
 
-from pip._internal.commands import download
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ContextTypes
 from gpt import ChatGptService
@@ -8,8 +7,8 @@ from util import (load_message, send_text, send_image, show_main_menu,
                   default_callback_handler, load_prompt, send_text_buttons, Dialog)
 
 import credentials
-
 import random
+from aiogram.types import FSInputFile
 
 import os
 
@@ -26,7 +25,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'talk': 'Поговорити з відомою особистістю 👤',
         'quiz': 'Взяти участь у квізі ❓',
         'translator': 'Перекладач',
-        'voice': 'голосове спілкування з GPT'
+        'voice': 'Голосове спілкування з GPT'
         # Додати команду в меню можна так:
         # 'command': 'button text'
 
@@ -299,7 +298,7 @@ async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = load_message('voice')
     await send_text(update, context, text)
     prompt = load_prompt('voice')
-    chat_gpt.set_prompt(prompt)
+
 
 async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     path_in = "resources/voice/voice_in.oga"
@@ -308,14 +307,11 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response_from_voice = await chat_gpt.send_voice(path_in)
     text = response_from_voice.text
     response_from_gpt = await chat_gpt.add_message(text)
-    await send_text(update, context, response_from_gpt)
+    await send_text(update, context, "Зачекайте голосової відповіді")
+    #await send_text(update, context, f"{response_from_gpt}\n\nЗачекайте голосової відповіді")
     path_out = "resources/voice/voice_out.mp3"
-    await chat_gpt.get_voice(path_out, response_from_gpt)
-
-
-
-
-
+    await chat_gpt.get_voice(path_out, text)
+    await update.message.reply_audio(audio=path_out)
 
 
 async def menu_text_handler(update, context):
@@ -341,6 +337,7 @@ dialog.success = 0
 dialog.question_counter = 0
 dialog.asked_question = False
 
+
 chat_gpt = ChatGptService(credentials.ChatGPT_TOKEN)
 app = ApplicationBuilder().token(credentials.BOT_TOKEN).build()
 
@@ -354,6 +351,7 @@ app.add_handler(CommandHandler('translator', translator))
 app.add_handler(CommandHandler('voice', voice))
 
 # Зареєструвати обробник колбеку можна так:
+app.add_handler(MessageHandler(filters.VOICE, voice_handler))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handler))
 app.add_handler(CallbackQueryHandler(random_buttons_handler, pattern='^random_.*'))
 app.add_handler(CallbackQueryHandler(gpt_buttons_handler, pattern='^gpt_.*'))
@@ -362,6 +360,5 @@ app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
 app.add_handler(CallbackQueryHandler(theme_buttons_handler, pattern='^theme_.*'))
 app.add_handler(CallbackQueryHandler(translator_buttons_handler, pattern='^trans_.*'))
 app.add_handler(CallbackQueryHandler(language_buttons_handler, pattern='^lang_.*'))
-app.add_handler(MessageHandler(filters.VOICE, voice_handler))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
