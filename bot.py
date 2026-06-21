@@ -14,7 +14,10 @@ import os
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "DEFAULT"
+    try:
+        dialog.mode[update.message.from_user.id] = "DEFAULT"
+    except:
+        dialog.mode[update.callback_query.from_user.id] = "DEFAULT"
     text = load_message('main')
     await send_image(update, context, 'main')
     await send_text(update, context, text)
@@ -43,7 +46,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "RANDOM"
+    try:
+        dialog.mode[update.message.from_user.id] = "RANDOM"
+    except:
+        dialog.mode[update.callback_query.from_user.id] = "RANDOM"
     await send_image(update, context, 'random')
     prompt = load_prompt('random')
     response = await chat_gpt.send_question(prompt, 'Давай рандомний факт')
@@ -55,13 +61,16 @@ async def bot_random(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'random_one_more' :'Хочу ще факт',
         }
     )
-    dialog.mode = "DEFAULT"
+    try:
+        dialog.mode[update.message.from_user.id] = "DEFAULT"
+    except:
+        dialog.mode[update.callback_query.from_user.id] = "DEFAULT"
 
 
 async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == 'random_finish':
-        dialog.mode = "DEFAULT"
+        dialog.mode[update.callback_query.from_user.id] = "DEFAULT"
         await start(update, context)
     elif query == 'random_one_more':
         await bot_random(update, context)
@@ -77,7 +86,7 @@ async def random_buttons_handler(update: Update, context: ContextTypes.DEFAULT_T
 
 
 async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "GPT"
+    dialog.mode[update.message.from_user.id] = "GPT"
     await send_image(update, context, 'gpt')
     msg = load_message('gpt')
     await send_text(update, context, msg)
@@ -99,7 +108,7 @@ async def gpt_dialog(update, context):
 async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == 'gpt_finish':
-        dialog.mode = None
+        dialog.mode[update.callback_query.from_user.id] = None
         await start(update, context)
 
     await update.callback_query.answer()
@@ -116,7 +125,7 @@ async def gpt_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "TALK"
+    dialog.mode[update.message.from_user.id] = "TALK"
     await send_image(update, context, "talk")
     text = load_message('talk')
     lines = text.split('\n')
@@ -133,7 +142,7 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def talk_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
-    dialog.mode = query
+    dialog.mode[update.callback_query.from_user.id] = query
     await person(update, context, query)
 
     await update.callback_query.answer()
@@ -169,7 +178,10 @@ quiz_themes = {
 
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = "QUIZ"
+    try:
+        dialog.mode[update.message.from_user.id] = "QUIZ"
+    except:
+        dialog.mode[update.callback_query.from_user.id] = "QUIZ"
     await send_image(update, context, "quiz")
     text = load_message("quiz")
     await send_text_buttons(
@@ -189,7 +201,7 @@ async def quiz_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         dialog.last_theme = query
     prompt = load_prompt("quiz")
     chat_gpt.set_prompt(prompt)
-    dialog.mode = quiz_theme
+    dialog.mode[update.callback_query.from_user.id] = quiz_theme
     dialog.success = 0
     dialog.question_counter = 0
     await quiz_gpt_question(update, context, quiz_theme)
@@ -229,7 +241,7 @@ async def quiz_gpt_answer(update:Update, context: ContextTypes.DEFAULT_TYPE):
 async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
     if query == "theme_continue":
-        await quiz_gpt_question(update, context, dialog.mode)
+        await quiz_gpt_question(update, context, dialog.mode[update.callback_query.from_user.id])
     elif query == "theme_choice":
         await quiz(update, context)
     elif query == "theme_end":
@@ -244,7 +256,10 @@ async def theme_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        dialog.mode = "TRANSLATOR"
+        try:
+            dialog.mode[update.message.from_user.id] = "TRANSLATOR"
+        except:
+            dialog.mode[update.callback_query.from_user.id] = "TRANSLATOR"
         await send_image(update, context, 'translator')
         text = load_message("translator")
         lines = text.split("\n")
@@ -260,7 +275,7 @@ async def translator(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def translator_buttons_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query.data
-    dialog.mode = query
+    dialog.mode[update.callback_query.from_user.id] = query
     prompt = load_prompt("translator")
     chat_gpt.set_prompt(prompt)
     await translator_gpt_invitation(update, context, query)
@@ -298,7 +313,7 @@ async def language_buttons_handler(update: Update, context: ContextTypes.DEFAULT
 
 
 async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dialog.mode = 'voice'
+    dialog.mode[update.message.from_user.id] = 'voice'
     await send_image(update, context, 'voice')
     text = load_message('voice')
     await send_text(update, context, text)
@@ -321,24 +336,24 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def menu_text_handler(update, context):
-    if dialog.mode == "DEFAULT":
+    if dialog.mode[update.message.from_user.id] == "DEFAULT":
         await send_text(update, context, "Використовуйте доступні комнди.")
-    elif dialog.mode == "GPT":
+    elif dialog.mode[update.message.from_user.id] == "GPT":
         await gpt_dialog(update, context)
-    elif dialog.mode == "TALK":
+    elif dialog.mode[update.message.from_user.id] == "TALK":
         await talk(update, context)
-    elif dialog.mode[:5] == "talk_":
-        await person_dialog(update, context, dialog.mode)
-    elif dialog.mode[:5] == "quiz_":
+    elif dialog.mode[update.message.from_user.id][:5] == "talk_":
+        await person_dialog(update, context, dialog.mode[update.message.from_user.id])
+    elif dialog.mode[update.message.from_user.id][:5] == "quiz_":
         await quiz_gpt_answer(update, context)
-    elif dialog.mode[:6] == "trans_":
-        await translator_gpt_answer(update, context, dialog.mode)
+    elif dialog.mode[update.message.from_user.id][:6] == "trans_":
+        await translator_gpt_answer(update, context, dialog.mode[update.message.from_user.id])
     else:
         await send_text(update, context, "Використовуйте доступні комнди.")
 
 #
 dialog = Dialog()
-dialog.mode = None
+dialog.mode = {}
 dialog.success = 0
 dialog.question_counter = 0
 dialog.asked_question = False
