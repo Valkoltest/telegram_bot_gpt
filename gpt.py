@@ -1,6 +1,10 @@
 from openai import OpenAI
 import httpx as httpx
 
+import credentials
+
+import credentials
+
 
 class ChatGptService:
     client: OpenAI = None
@@ -37,3 +41,13 @@ class ChatGptService:
         self.message_list.append({"role": "system", "content": prompt_text})
         self.message_list.append({"role": "user", "content": message_text})
         return await self.send_message_list()
+
+    async def send_voice(self, path: str):
+        client = OpenAI(api_key=credentials.ChatGPT_TOKEN)
+        with open(path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                language="uk"  # Вкажіть мову, наприклад "uk" або "en"
+            )
+        return transcription

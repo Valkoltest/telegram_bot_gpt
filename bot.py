@@ -1,5 +1,6 @@
 from http.client import responses
 
+from pip._internal.commands import download
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ContextTypes
 from gpt import ChatGptService
@@ -9,6 +10,8 @@ from util import (load_message, send_text, send_image, show_main_menu,
 import credentials
 
 import random
+
+import os
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -22,7 +25,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'gpt': 'Задати питання чату GPT 🤖',
         'talk': 'Поговорити з відомою особистістю 👤',
         'quiz': 'Взяти участь у квізі ❓',
-        'translator': 'Перекладач'
+        'translator': 'Перекладач',
+        'voice': 'голосове спілкування з GPT'
         # Додати команду в меню можна так:
         # 'command': 'button text'
 
@@ -289,6 +293,20 @@ async def language_buttons_handler(update: Update, context: ContextTypes.DEFAULT
 # надіслати у вигляді аудіоповідомлення користувачеві.
 
 
+async def voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_image(update, context, 'voice')
+    text = load_message('voice')
+    await send_text(update, context, text)
+
+async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    path = "resources/voice/voice_in.oga"
+    file = await update.message.voice.get_file()
+    await file.download_to_drive(path)
+    response = await chat_gpt.send_voice(path)
+    await send_text(update, context, response.text)
+
+
+
 
 async def menu_text_handler(update, context):
     if dialog.mode == "DEFAULT":
@@ -323,6 +341,7 @@ app.add_handler(CommandHandler('gpt', gpt))
 app.add_handler(CommandHandler('talk', talk))
 app.add_handler(CommandHandler('quiz', quiz))
 app.add_handler(CommandHandler('translator', translator))
+app.add_handler(CommandHandler('voice', voice))
 
 # Зареєструвати обробник колбеку можна так:
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_text_handler))
@@ -333,5 +352,6 @@ app.add_handler(CallbackQueryHandler(quiz_buttons_handler, pattern='^quiz_.*'))
 app.add_handler(CallbackQueryHandler(theme_buttons_handler, pattern='^theme_.*'))
 app.add_handler(CallbackQueryHandler(translator_buttons_handler, pattern='^trans_.*'))
 app.add_handler(CallbackQueryHandler(language_buttons_handler, pattern='^lang_.*'))
+app.add_handler(MessageHandler(filters.VOICE, voice_handler))
 # app.add_handler(CallbackQueryHandler(default_callback_handler))
 app.run_polling()
